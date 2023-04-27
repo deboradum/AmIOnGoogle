@@ -68,7 +68,7 @@ def get_buckets(faces_matrix):
     return r
 
 
-# Converts an array to a string.
+# Converts an array to a string, for example:
 # [1, 0, 1, 0, 0] ==> '10100'
 def array2string(array):
     s = ''
@@ -78,7 +78,19 @@ def array2string(array):
     return e
 
 
+# Converts an array of face dicts ({embedding: [], facial_area: []}[] ) to a matrix of faces.
+def faces2matrix(faces):
+    num_faces = len(faces)
+    m = np.empty((DEEPFACE_VECTOR_LENGTH, num_faces))
+    for i, face in enumerate(faces):
+        v = np.array(v['embedding'])
+        m[:, i] = v
+
+    return m
+
+
 if  __name__ == '__main__':
+    # Argparser
     parser = argparse.ArgumentParser()
     parser.add_argument('-t','--target', help='Image path containing target face. Largest face in the image gets used.', required=True)
     parser.add_argument('-q','--query', help='Search term to use on Google Images.', required=True)
@@ -86,14 +98,17 @@ if  __name__ == '__main__':
     # Need to check what a useful default & max value should be.
     parser.add_argument('-v', '--vector', help='Number of random vectors to use in Locality Sensitive Hashing algorithm.', default=2, choices=range(2, 10), metavar='[2-10]')
     args = vars(parser.parse_args())
-    #-------------------------------------------------------------------------#
+
+    # Sets variables based on arguments.
     global target, search_query, num_images
     target = args['target']
     search_query = args['query']
     num_images = args['number']
     num_rvectors = args['vector']
 
-    # Sets up LSH algorithm variables
+    #-------------------------------------------------------------------------#
+
+    # Sets up LSH algorithm variables.
     global lsh_matrix
     lsh_matrix = create_lsh_matrix(num_rvectors)
     lsh_bucket_keys = ["".join(seq) for seq in itertools.product("01", repeat=num_rvectors)]
@@ -101,9 +116,7 @@ if  __name__ == '__main__':
     for key in lsh_bucket_keys:
         lsh_buckets[key] = np.array([])
 
-    print(lsh_buckets)
-
-
+    # Sets target face variables.
     target_face = find_target(target)
     if target_face is None:
         print("No target face found, exiting.")
