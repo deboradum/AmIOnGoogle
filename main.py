@@ -51,7 +51,7 @@ def find_target(path):
 def create_lsh_matrix(num_vectors):
     m = np.empty((DEEPFACE_VECTOR_LENGTH, num_vectors))
     # Create random vectors and sets these vectors as columns of the matrix.
-    for i in range num_vectors:
+    for i in range(num_vectors):
         v = np.random.rand(DEEPFACE_VECTOR_LENGTH)
         m[:, i] = v
 
@@ -62,40 +62,53 @@ def create_lsh_matrix(num_vectors):
 def get_buckets(faces_matrix):
     # Need to implement check to assert matrix sizes...?
 
-    return faces_matrix @ lsh_matrix
+    multiplied = faces_matrix @ lsh_matrix
+    # If element is greater than 0, convert to a 1, else to 0.
+    r = np.where(multiplied > 0, 1, 0)
+    return r
+
+
+# Converts an array to a string.
+# [1, 0, 1, 0, 0] ==> '10100'
+def array2string(array):
+    s = ''
+    for e in array:
+        s += str(e)
+
+    return e
 
 
 if  __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-t','--target', help='Image path containing target face. Largest face in the image gets used.', required=True)
-    parser.add_argument('-1','--query', help='Search term to use on Google Images.', required=True)
+    parser.add_argument('-q','--query', help='Search term to use on Google Images.', required=True)
     parser.add_argument('-n', '--number', help='Number of images to search through.', choices=range(10, 1000), metavar="[10-1000]", default=100)
     # Need to check what a useful default & max value should be.
-    parser.add_argument('-v', '--vector', help='Number of random vectors to use in Locality Sensitive Hashing algorithm.', default=4, choices=range(2, 10), metavar='[2-10]')
+    parser.add_argument('-v', '--vector', help='Number of random vectors to use in Locality Sensitive Hashing algorithm.', default=2, choices=range(2, 10), metavar='[2-10]')
     args = vars(parser.parse_args())
-    
+    #-------------------------------------------------------------------------#
     global target, search_query, num_images
     target = args['target']
     search_query = args['query']
     num_images = args['number']
     num_rvectors = args['vector']
 
-    target_face = find_target(target)
-    if target_face is None:
-        print("No target face found, exiting.")
-        exit()
-    target_bucket = 
-
-
     # Sets up LSH algorithm variables
     global lsh_matrix
     lsh_matrix = create_lsh_matrix(num_rvectors)
-    lsh_bucket_keys = ["".join(seq) for seq in itertools.product("01", repeat=3)]
+    lsh_bucket_keys = ["".join(seq) for seq in itertools.product("01", repeat=num_rvectors)]
     lsh_buckets = dict()
     for key in lsh_bucket_keys:
         lsh_buckets[key] = np.array([])
 
+    print(lsh_buckets)
 
+
+    target_face = find_target(target)
+    if target_face is None:
+        print("No target face found, exiting.")
+        exit()
+    target_bucket = array2string(get_buckets(target_face))
 
 
 
