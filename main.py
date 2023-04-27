@@ -112,9 +112,7 @@ if  __name__ == '__main__':
     global lsh_matrix
     lsh_matrix = create_lsh_matrix(num_rvectors)
     lsh_bucket_keys = ["".join(seq) for seq in itertools.product("01", repeat=num_rvectors)]
-    lsh_buckets = dict()
-    for key in lsh_bucket_keys:
-        lsh_buckets[key] = np.array([])
+    lsh_buckets = {key: np.array([]) for key in lsh_bucket_keys}
 
     # Sets target face variables.
     target_face = find_target(target)
