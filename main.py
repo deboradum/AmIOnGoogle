@@ -4,10 +4,11 @@ import numpy as np
 import argparse
 from os import listdir
 import os.path
+import itertools
 
 
 ACCEPTED_FORMATS = ['png', 'PNG', 'jpg', 'jpeg', 'JPG', 'JPEG', 'webp']
-
+DEEPFACE_VECTOR_LENGTH = 2622
 
 # Checks if file is legal (supported image type).
 def accepted_file(path):
@@ -30,9 +31,6 @@ def find_faces(path):
     return DeepFace.represent(img_path = path)
 
 
-
-
-
 # Finds target face
 def find_target(path):
     faces = find_faces(path)
@@ -49,11 +47,55 @@ def find_target(path):
     return np.array(best_fit)
 
 
+# Creates the matrix of random vectors used for the Locality Sensitive Hashing algorithm.
+def create_lsh_matrix(num_vectors):
+    m = np.empty((DEEPFACE_VECTOR_LENGTH, num_vectors))
+    # Create random vectors and sets these vectors as columns of the matrix.
+    for i in range num_vectors:
+        v = np.random.rand(DEEPFACE_VECTOR_LENGTH)
+        m[:, i] = v
 
-if __name__ == '__main__':
+    return m
+
+
+# Gets the bucket of faces by multiplying the random vector matrix with the faces matrix.
+def get_buckets(faces_matrix):
+    # Need to implement check to assert matrix sizes...?
+
+    return faces_matrix @ lsh_matrix
+
+
+if  __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-t','--target', help='Image path containing target face. Largest face in the image gets used.', required=True)
-    parser.add_argument('-s','--search', help='Search term to use on Google Images.', required=True)
+    parser.add_argument('-1','--query', help='Search term to use on Google Images.', required=True)
     parser.add_argument('-n', '--number', help='Number of images to search through.', choices=range(10, 1000), metavar="[10-1000]", default=100)
+    # Need to check what a useful default & max value should be.
+    parser.add_argument('-v', '--vector', help='Number of random vectors to use in Locality Sensitive Hashing algorithm.', default=4, choices=range(2, 10), metavar='[2-10]')
     args = vars(parser.parse_args())
-    print("test")
+    
+    global target, search_query, num_images
+    target = args['target']
+    search_query = args['query']
+    num_images = args['number']
+    num_rvectors = args['vector']
+
+    target_face = find_target(target)
+    if target_face is None:
+        print("No target face found, exiting.")
+        exit()
+    target_bucket = 
+
+
+    # Sets up LSH algorithm variables
+    global lsh_matrix
+    lsh_matrix = create_lsh_matrix(num_rvectors)
+    lsh_bucket_keys = ["".join(seq) for seq in itertools.product("01", repeat=3)]
+    lsh_buckets = dict()
+    for key in lsh_bucket_keys:
+        lsh_buckets[key] = np.array([])
+
+
+
+
+
