@@ -94,7 +94,7 @@ def array2string(array):
     return e
 
 
-# Converts an array of face dicts ({embedding: [], facial_area: []}[] ) to a matrix of faces.
+# Converts an array of face dicts ({embedding: [], facial_area: []}[]) to a matrix of faces.
 def faces2matrix(faces):
     num_faces = len(faces)
     m = np.empty((DEEPFACE_VECTOR_LENGTH, num_faces))
@@ -105,7 +105,7 @@ def faces2matrix(faces):
     return m
 
 
-# Gets and saves image from url. Returns 1 on failure, 0 otherwise.
+# Gets and saves image from url to hard drive. Returns 1 on failure, 0 otherwise.
 def get_image(url):
     r = requests.get(url)
     if r.status_code != 200:
@@ -117,6 +117,22 @@ def get_image(url):
     im.save('image.jpg')
 
     return 0
+
+
+# Deletes image from drive.
+def delete_image():
+    if os.path.isfile('image.jpg'):
+        os.remove('image.jpg')
+
+
+# Checks if a face is similar (enough) to the main face.
+# Accepted modes: cosine or euclidean.
+def is_similar(check_face, threshold):
+    cs = np.dot(self.targetFaceV, check_face) / (np.linalg.norm(self.targetFaceV) * np.linalg.norm(check_face))
+    if cs >= threshold:
+        return True
+    else:
+        return False
 
 
 if  __name__ == '__main__':
@@ -142,7 +158,7 @@ if  __name__ == '__main__':
     global lsh_matrix
     lsh_matrix = create_lsh_matrix(num_rvectors)
     lsh_bucket_keys = ["".join(seq) for seq in itertools.product("01", repeat=num_rvectors)]
-    lsh_buckets = {key: np.array([]) for key in lsh_bucket_keys}
+    lsh_buckets = {key: [] for key in lsh_bucket_keys}
 
     # Sets target face variables.
     target_face = find_target(target)
@@ -150,8 +166,31 @@ if  __name__ == '__main__':
         print("No target face found, exiting.")
         exit()
     target_bucket = array2string(get_buckets(target_face))
+
+    # Goes over all images, finds faces, bucketizes them and inserts them into the lsh dictionary.
+    img_urls = get_image_urls(search_query, num_images)
+    for url in img_urls:
+        get_image(TEST_URLS[0])
+        faces = find_faces('image.jpg')
+        faces_m = faces2matrix(faces)
+        bucket_m = get_buckets(faces_m)
+        for i, b in enumerate(bucket_m):
+            bucket = array2string(b)
+            # Skips vectors that are not in the same bucket as the target face.
+            # This saves space, but is not neccesary.
+            if bucket != target_bucket:
+                continue
+            lsh_buckets[bucket].append((faces_m[i], url))
+       
+
+    potential_faces = lsh_buckets[target_face]
+    for face_v, url in potential_faces:
+        if is_similar(face_v, 0.65)  # TODO: variable threshold
+            print('Found similar face!', url)
     
-    get_image(TEST_URLS[0])
+
+
+
 
 
 
