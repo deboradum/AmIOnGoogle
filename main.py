@@ -23,7 +23,8 @@ TEST_URLS = ['https://www.hollywoodreporter.com/wp-content/uploads/2022/10/Getty
              'https://assets.euromoneydigital.com/dims4/default/53d1382/2147483647/strip/true/crop/620x380+0+0/resize/840x515!/quality/90/?url=http%3A%2F%2Feuromoney-brightspot.s3.amazonaws.com%2F06%2F30%2Faf0e9e02463a8e05ab6ece2153e1%2Fkanye-west-adidas-logo-2023.png',
              'https://wwd.com/wp-content/uploads/2019/11/kanye-west-at-fast-company-panel-nyc.jpg?w=1000&h=563&crop=1',
              'https://images.theconversation.com/files/110255/original/image-20160204-5857-3nvdk7.jpg?ixlib=rb-1.1.0&q=45&auto=format&w=1200&h=1200.0&fit=crop',
-             'https://failurebeforesuccess.com/wp-content/uploads/2022/07/1099403-scaled.jpg']
+             'https://failurebeforesuccess.com/wp-content/uploads/2022/07/1099403-scaled.jpg',
+             'https://images.hola.com/us/images/027f-1794e31eba5b-0b9c5fc6103d-1000/vertical-480/kanye-west-his-wife-bianca-censori-and-his-daughter-north.jpg']
 
 
 # Checks if file is legal (supported image type).
@@ -44,7 +45,11 @@ def accepted_file(path):
 def find_faces(path):
     if not accepted_file(path):
         return None
-    return DeepFace.represent(img_path = path)
+
+    try:
+        return DeepFace.represent(img_path = path)
+    except Exception as e:
+        return None
 
 
 # Finds target face
@@ -77,8 +82,7 @@ def create_lsh_matrix(num_vectors):
 # Gets the bucket of faces by multiplying the random vector matrix with the faces matrix.
 def get_buckets(faces_matrix):
     # Need to implement check to assert matrix sizes...?
-
-    multiplied = faces_matrix @ lsh_matrix
+    multiplied = faces_matrix.T @ lsh_matrix
     # If element is greater than 0, convert to a 1, else to 0.
     r = np.where(multiplied > 0, 1, 0)
     return r
@@ -91,7 +95,7 @@ def array2string(array):
     for e in array:
         s += str(e)
 
-    return e
+    return s
 
 
 # Converts an array of face dicts ({embedding: [], facial_area: []}[]) to a matrix of faces.
@@ -99,7 +103,7 @@ def faces2matrix(faces):
     num_faces = len(faces)
     m = np.empty((DEEPFACE_VECTOR_LENGTH, num_faces))
     for i, face in enumerate(faces):
-        v = np.array(v['embedding'])
+        v = np.array(face['embedding'])
         m[:, i] = v
 
     return m
@@ -125,10 +129,15 @@ def delete_image():
         os.remove('image.jpg')
 
 
+# Gets image urls using SerpAPI. TODO
+def get_image_urls(query, num_results):
+    return
+
 # Checks if a face is similar (enough) to the main face.
 # Accepted modes: cosine or euclidean.
-def is_similar(check_face, threshold):
-    cs = np.dot(self.targetFaceV, check_face) / (np.linalg.norm(self.targetFaceV) * np.linalg.norm(check_face))
+def is_similar(target_v, face_v, threshold):
+    cs = np.dot(target_v, face_v) / (np.linalg.norm(target_v) * np.linalg.norm(face_v))
+    print(cs, face_v[0], face_v[1], face_v[2])
     if cs >= threshold:
         return True
     else:
@@ -160,6 +169,8 @@ if  __name__ == '__main__':
     lsh_bucket_keys = ["".join(seq) for seq in itertools.product("01", repeat=num_rvectors)]
     lsh_buckets = {key: [] for key in lsh_bucket_keys}
 
+    print("Finding target face")
+
     # Sets target face variables.
     target_face = find_target(target)
     if target_face is None:
@@ -167,26 +178,37 @@ if  __name__ == '__main__':
         exit()
     target_bucket = array2string(get_buckets(target_face))
 
+    print('Found target face')
+
     # Goes over all images, finds faces, bucketizes them and inserts them into the lsh dictionary.
-    img_urls = get_image_urls(search_query, num_images)
+    #img_urls = get_image_urls(search_query, num_images)
+    img_urls = TEST_URLS
     for url in img_urls:
-        get_image(TEST_URLS[0])
+        get_image(url)
         faces = find_faces('image.jpg')
+        if faces is None:
+            print('No faces found')
+            continue
+        print('Number of faces found in image:', len(faces))
         faces_m = faces2matrix(faces)
         bucket_m = get_buckets(faces_m)
         for i, b in enumerate(bucket_m):
             bucket = array2string(b)
+            print(bucket, target_bucket)
             # Skips vectors that are not in the same bucket as the target face.
             # This saves space, but is not neccesary.
             if bucket != target_bucket:
                 continue
-            lsh_buckets[bucket].append((faces_m[i], url))
+            lsh_buckets[bucket].append((faces[i]['embedding'], url))
+        delete_image()
        
-
-    potential_faces = lsh_buckets[target_face]
+    print('bucketizd all faces')
+    potential_faces = lsh_buckets[target_bucket]
+    f = open('faces.txt', 'w+')
+    print(len(potential_faces))
     for face_v, url in potential_faces:
-        if is_similar(face_v, 0.65)  # TODO: variable threshold
-            print('Found similar face!', url)
+        if is_similar(target_face, face_v, 0.65):  # TODO: variable threshold
+            f.write(f'{url}\n')
     
 
 
