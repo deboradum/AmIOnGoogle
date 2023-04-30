@@ -229,7 +229,6 @@ if  __name__ == '__main__':
         bucket_m = get_buckets(faces_m)
         for i, b in enumerate(bucket_m):
             bucket = array2string(b)
-            print(bucket, target_bucket)
             # Skips vectors that are not in the same bucket as the target face.
             # This saves space, but is not neccesary.
             if bucket != target_bucket:
