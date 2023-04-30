@@ -8,7 +8,11 @@ import itertools
 from PIL import Image
 import requests
 from io import BytesIO
+from serpapi import GoogleSearch
+from dotenv import load_dotenv
 
+load_dotenv()
+api_key = os.environ.get('APIKEY')
 
 ACCEPTED_FORMATS = ['png', 'PNG', 'jpg', 'jpeg', 'JPG', 'JPEG', 'webp']
 DEEPFACE_VECTOR_LENGTH = 2622
@@ -130,28 +134,56 @@ def delete_image():
 
 
 # Gets image urls using SerpAPI. TODO
-def get_image_urls(query, num_results):
-    return
+def get_image_urls(query, num_results, page=1):
+    links = []
+    # Creates & sends the query.
+    params = {
+        "engine": "google_images",
+        "q": query,
+        "api_key": api_key
+    }
+    search = GoogleSearch(params)
+    results = search.get_dict()
+    im_results = results['images_results']
+    # Gets image links.
+    for i, im_json in enumerate(im_results):
+        if i > num_results:
+            break
+        link = im_json['original']
+        links.append(link)
+    # If more than 100 results should be received, get more from the next page.
+    if num_results > 100:
+        more_links = get_image_urls(query, num_results-100, page+1)
+        links += more_links
+    
+    return links
 
 # Checks if a face is similar (enough) to the main face.
 # Accepted modes: cosine or euclidean.
 def is_similar(target_v, face_v, threshold):
     cs = np.dot(target_v, face_v) / (np.linalg.norm(target_v) * np.linalg.norm(face_v))
-    print(cs, face_v[0], face_v[1], face_v[2])
     if cs >= threshold:
         return True
     else:
         return False
 
 
+def num_checker(num):
+    n = int(num)
+
+    if n >= 10 and n < 1000:
+        return n
+    
+    raise argparse.ArgumentTypeError('Invalid choice, choose between 10 and 1000.')
+
 if  __name__ == '__main__':
     # Argparser
     parser = argparse.ArgumentParser()
     parser.add_argument('-t','--target', help='Image path containing target face. Largest face in the image gets used.', required=True)
     parser.add_argument('-q','--query', help='Search term to use on Google Images.', required=True)
-    parser.add_argument('-n', '--number', help='Number of images to search through.', choices=range(10, 1000), metavar="[10-1000]", default=100)
+    parser.add_argument('-n', '--number', help='Number of images to search through.', type=num_checker, default=100)
     # Need to check what a useful default & max value should be.
-    parser.add_argument('-v', '--vector', help='Number of random vectors to use in Locality Sensitive Hashing algorithm.', default=2, choices=range(2, 10), metavar='[2-10]')
+    parser.add_argument('-v', '--vector', help='Number of random vectors to use in Locality Sensitive Hashing algorithm.', default=1, choices=range(1, 10), metavar='[1-10]')
     args = vars(parser.parse_args())
 
     # Sets variables based on arguments.
@@ -181,10 +213,13 @@ if  __name__ == '__main__':
     print('Found target face')
 
     # Goes over all images, finds faces, bucketizes them and inserts them into the lsh dictionary.
-    #img_urls = get_image_urls(search_query, num_images)
-    img_urls = TEST_URLS
+    img_urls = get_image_urls(search_query, num_images)
     for url in img_urls:
-        get_image(url)
+        try:
+            get_image(url)
+        except Exception as e:
+            delete_image()
+            continue
         faces = find_faces('image.jpg')
         if faces is None:
             print('No faces found')
@@ -207,7 +242,7 @@ if  __name__ == '__main__':
     f = open('faces.txt', 'w+')
     print(len(potential_faces))
     for face_v, url in potential_faces:
-        if is_similar(target_face, face_v, 0.65):  # TODO: variable threshold
+        if is_similar(target_face, face_v, 0.65):
             f.write(f'{url}\n')
     
 
