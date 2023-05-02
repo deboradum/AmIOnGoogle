@@ -220,6 +220,7 @@ if  __name__ == '__main__':
         except Exception as e:
             delete_image()
             continue
+        print("Checking image...")
         faces = find_faces('image.jpg')
         if faces is None:
             print('No faces found')
@@ -234,18 +235,21 @@ if  __name__ == '__main__':
             if bucket != target_bucket:
                 continue
             lsh_buckets[bucket].append((faces[i]['embedding'], url))
+            print("Found similar face")
         delete_image()
        
     print('bucketizd all faces')
     potential_faces = lsh_buckets[target_bucket]
     f = open('faces.txt', 'w+')
-    print(len(potential_faces))
+    fw = open('unmatched.txt', 'w+')
     for face_v, url in potential_faces:
         if is_similar(target_face, face_v, 0.65):
             f.write(f'{url}\n')
+        else:
+            fw.write(f'{url}\n')
     
-
-
+    f.close()
+    fw.close()
 
 
 
