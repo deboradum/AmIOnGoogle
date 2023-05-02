@@ -238,16 +238,18 @@ if  __name__ == '__main__':
             print("Found similar face")
         delete_image()
        
-    print('bucketizd all faces')
     potential_faces = lsh_buckets[target_bucket]
+    print(f'bucketizd all faces, {len(potential_faces)} in the same bucket as target.')
     f = open('faces.txt', 'w+')
     fw = open('unmatched.txt', 'w+')
+    num_same = 0
     for face_v, url in potential_faces:
         if is_similar(target_face, face_v, 0.65):
             f.write(f'{url}\n')
+            num_same += 1
         else:
             fw.write(f'{url}\n')
-    
+    print(f"Checked all faces. {num_same} identical found.")
     f.close()
     fw.close()
 
