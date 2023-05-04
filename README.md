@@ -1,5 +1,5 @@
 # AmIOnGoogle
-A tool that uses DeepFace &amp; Random Projection Hasing that checks if your face is on Google Images
+A tool that uses DeepFace &amp; Random Projection Hashing that checks if your face is on Google Images
 
 To gain more experience with AI & my Jetson Nano, I created this tool. The tool lets you select an image and a search term. The biggest face from the input image is analyzed and vectorized by DeepFace AI. Next, it searches Google Images and uses DeepFace to detect faces in the images. A locality sensitive hashing algorithm is then applied on these face-feature vectors to bucketize the faces. Then, the faces in the same bucket as the input image are further compared using cosine similarity to find the same person in the Google Images.
 
