@@ -18,19 +18,6 @@ ACCEPTED_FORMATS = ['png', 'PNG', 'jpg', 'jpeg', 'JPG', 'JPEG', 'webp']
 DEEPFACE_VECTOR_LENGTH = 2622
 
 
-TEST_URLS = ['https://www.hollywoodreporter.com/wp-content/uploads/2022/10/GettyImages-1398676954-H-2022.jpg?w=1296', 
-             'https://parade.com/.image/t_share/MTk3NDgxMjQzNjIzODI2NDM4/kanye-west-wife-kanye-west-bianca-censori.jpg',
-             'https://media.gq-magazine.co.uk/photos/5d13a7d52881ccbf300a9586/16:9/pass/kanye-west-03-gq-7feb19_getty_b.jpg',
-             'https://images0.persgroep.net/rcs/01FOn6gfdTOChv-rnFORx_DpEJM/diocontent/160165041/_fitwidth/763?appId=93a17a8fd81db0de025c8abd1cca1279&quality=0.8',
-             'https://upload.wikimedia.org/wikipedia/commons/b/bb/Kanye_West_at_the_Met_Gala_in_2019_2.png',
-             'https://ca-times.brightspotcdn.com/dims4/default/6f80eaa/2147483647/strip/false/crop/2514x1556+0+0/resize/1486x920!/quality/80/?url=https%3A%2F%2Fcalifornia-times-brightspot.s3.amazonaws.com%2F64%2F2d%2Fb889abb448c695d9afcd1afc378e%2Fkim-kardashian-kanye-west-divorce-71287.jpg',
-             'https://assets.euromoneydigital.com/dims4/default/53d1382/2147483647/strip/true/crop/620x380+0+0/resize/840x515!/quality/90/?url=http%3A%2F%2Feuromoney-brightspot.s3.amazonaws.com%2F06%2F30%2Faf0e9e02463a8e05ab6ece2153e1%2Fkanye-west-adidas-logo-2023.png',
-             'https://wwd.com/wp-content/uploads/2019/11/kanye-west-at-fast-company-panel-nyc.jpg?w=1000&h=563&crop=1',
-             'https://images.theconversation.com/files/110255/original/image-20160204-5857-3nvdk7.jpg?ixlib=rb-1.1.0&q=45&auto=format&w=1200&h=1200.0&fit=crop',
-             'https://failurebeforesuccess.com/wp-content/uploads/2022/07/1099403-scaled.jpg',
-             'https://images.hola.com/us/images/027f-1794e31eba5b-0b9c5fc6103d-1000/vertical-480/kanye-west-his-wife-bianca-censori-and-his-daughter-north.jpg']
-
-
 # Checks if file is legal (supported image type).
 def accepted_file(path):
     if not os.path.isfile(path):
